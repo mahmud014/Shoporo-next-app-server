@@ -29,10 +29,14 @@ async function run() {
 
     const database = client.db("shoporaDB");
     const productsCollection = database.collection("products");
+    const reviewCollection = database.collection("reviews");
 
     // get all products
     app.get("/products", async (req, res) => {
-      const cursor = productsCollection.find();
+      const email = req.query.email;
+      let query = {};
+      if (email) query.email = email;
+      const cursor = productsCollection.find(query);
       const result = await cursor.toArray();
 
       // normalize _id to string
@@ -102,6 +106,17 @@ async function run() {
 
       const result = await productsCollection.deleteOne(query);
       res.send(result);
+    });
+
+    // Reviews API
+
+    app.get("/reviews", async (req, res) => {
+      const cursor = reviewCollection.find();
+      const result = await cursor.toArray();
+
+      // normalize _id to string
+      const normalized = result.map((r) => ({ ...r, _id: r._id.toString() }));
+      res.send(normalized);
     });
 
     await client.db("admin").command({ ping: 1 });
